@@ -1,7 +1,9 @@
 // Webhook do Mercado Pago — recebe avisos de pagamento.
-// Quando o pagamento é APROVADO, envia automaticamente um e-mail
-// para o comprador com o link do Google Drive (via Brevo).
+// Quando o pagamento é APROVADO: envia e-mail (Brevo) + dispara Purchase
+// na API de Conversões da Meta (CAPI, server-side).
 // Sempre responde 200 rápido pro MP não reenviar.
+
+import crypto from 'crypto';
 
 export default async function handler(req, res) {
   try {
@@ -17,6 +19,7 @@ export default async function handler(req, res) {
 
       if (p.status === 'approved') {
         await enviarEmail(p);
+        await enviarCapi(p);
       }
     }
   } catch (e) {
@@ -77,5 +80,50 @@ async function enviarEmail(p) {
     else console.log('[BREVO] enviado para', email, data);
   } catch (e) {
     console.error('[BREVO] exceção', e);
+  }
+}
+
+// ===== Meta — API de Conversões (server-side) =====
+function sha256(v) {
+  return crypto.createHash('sha256').update(String(v).trim().toLowerCase()).digest('hex');
+}
+
+async function enviarCapi(p) {
+  const PIXEL_ID = '1464449862100173';
+  const token = process.env.META_CAPI_TOKEN;
+  if (!token) { console.log('[CAPI] sem META_CAPI_TOKEN'); return; }
+
+  const meta = p.metadata || {};
+  const email = String(meta.email || (p.payer && p.payer.email) || '').trim().toLowerCase();
+  const fone = String(meta.telefone || '').replace(/\D/g, '');
+  const valor = p.transaction_amount || (p.external_reference === 'combo' ? 19.90 : 9.90);
+
+  const user_data = {};
+  if (email) user_data.em = [sha256(email)];
+  if (fone) user_data.ph = [sha256('55' + fone)];
+
+  const body = {
+    data: [{
+      event_name: 'Purchase',
+      event_time: Math.floor(Date.now() / 1000),
+      action_source: 'website',
+      event_id: 'purchase_' + p.id,            // mesmo id do navegador → deduplica
+      event_source_url: 'https://figurinhascopa2026-bay.vercel.app/obrigado.html',
+      user_data: user_data,
+      custom_data: { currency: 'BRL', value: valor }
+    }]
+  };
+
+  try {
+    const r = await fetch(`https://graph.facebook.com/v21.0/${PIXEL_ID}/events?access_token=${token}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (!r.ok) console.error('[CAPI] erro', d);
+    else console.log('[CAPI] enviado', d);
+  } catch (e) {
+    console.error('[CAPI] exceção', e);
   }
 }
