@@ -1,0 +1,73 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagamento Confirmado — Figurinhas Copa 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Anton&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--green:#0b8b3d;--green-dark:#066b2d;--gold:#f4b400;--ink:#12241a}
+    body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
+    .anton{font-family:'Anton',sans-serif}
+    .card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:44px 32px;max-width:480px;width:100%;backdrop-filter:blur(4px)}
+    .btn{display:inline-block;background:var(--gold);color:var(--ink);font-weight:800;text-decoration:none;text-transform:uppercase;letter-spacing:.04em;padding:18px 36px;border-radius:12px;font-size:1.05rem;box-shadow:0 10px 24px rgba(244,180,0,.35);transition:transform .15s}
+    .btn:hover{transform:translateY(-2px)}
+    .muted{color:#d6f0dd;font-size:.9rem;line-height:1.55}
+  </style>
+
+  <!-- ════════ META PIXEL — troque SEU_PIXEL_ID ════════ -->
+  <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init','SEU_PIXEL_ID');
+    fbq('track','PageView');
+  </script>
+</head>
+<body>
+  <div class="card">
+    <div style="font-size:3rem;margin-bottom:14px;">🏆</div>
+    <h1 class="anton" style="font-size:2rem;text-transform:uppercase;margin-bottom:10px;" id="titulo">Confirmando seu pagamento…</h1>
+    <p class="muted" id="msg" style="margin-bottom:28px;">Aguarde um instante.</p>
+    <div id="acao"></div>
+  </div>
+
+  <script>
+  (function(){
+    var params = new URLSearchParams(location.search);
+    var paymentId = params.get('payment_id') || params.get('collection_id');
+    var status    = params.get('status') || params.get('collection_status');
+
+    var titulo = document.getElementById('titulo');
+    var msg    = document.getElementById('msg');
+    var acao   = document.getElementById('acao');
+
+    function erro(txt){
+      titulo.textContent = 'Ops…';
+      msg.textContent = txt;
+    }
+
+    if (!paymentId) { erro('Não encontramos o seu pagamento. Se você pagou, verifique seu e-mail do Mercado Pago.'); return; }
+
+    fetch('/api/verify?payment_id=' + encodeURIComponent(paymentId))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.approved && d.url) {
+          titulo.textContent = 'Pagamento confirmado! 🎉';
+          msg.innerHTML = 'Acesso liberado. Clique abaixo para baixar sua coleção completa.';
+          acao.innerHTML = '<a class="btn" href="' + d.url + '" target="_blank" rel="noopener">📥 Acessar minha coleção</a>'
+                         + '<p class="muted" style="margin-top:18px;">Salve este link. Qualquer dúvida, responda o e-mail da compra.</p>';
+          // evento de conversão no Pixel do Facebook
+          if (window.fbq) fbq('track','Purchase', { currency:'BRL', value: (params.get('pacote')==='combo'?19.90:9.90) });
+        } else if (d.status === 'pending' || d.status === 'in_process') {
+          titulo.textContent = 'Pagamento em análise';
+          msg.textContent = 'Seu pagamento ainda está sendo processado (comum no Pix/boleto). Assim que aprovar, o acesso é liberado — você receberá por e-mail.';
+        } else {
+          erro('Não conseguimos confirmar o pagamento. Se você já pagou, aguarde alguns minutos e recarregue a página.');
+        }
+      })
+      .catch(function(){ erro('Erro ao confirmar o pagamento. Recarregue a página em instantes.'); });
+  })();
+  </script>
+</body></html>
