@@ -193,6 +193,21 @@
       return null;
     }
 
+    // ---- máscaras (CPF e telefone) ----
+    function mascaraCPF(v){
+      v = v.replace(/\D/g,'').slice(0,11);
+      return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+    }
+    function mascaraTel(v){
+      v = v.replace(/\D/g,'').slice(0,11);
+      if (v.length > 10) return v.replace(/(\d{2})(\d{5})(\d{0,4})/,'($1) $2-$3').replace(/[-\s]+$/,'');
+      return v.replace(/(\d{2})(\d{0,4})(\d{0,4})/,'($1) $2-$3').replace(/[-\s]+$/,'').replace(/\($/,'').replace(/\(\)\s$/,'');
+    }
+    var cpfInput = document.getElementById('form-checkout__identificationNumber');
+    var telInput = document.getElementById('form-checkout__phone');
+    if (cpfInput) cpfInput.addEventListener('input', function(){ this.value = mascaraCPF(this.value); });
+    if (telInput) telInput.addEventListener('input', function(){ this.value = mascaraTel(this.value); });
+
     // ---- troca de abas ----
     var tabPix=document.getElementById('tab-pix'), tabCard=document.getElementById('tab-card');
     var panelPix=document.getElementById('panel-pix'), panelCard=document.getElementById('panel-card');
