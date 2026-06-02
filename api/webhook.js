@@ -27,6 +27,7 @@ export default async function handler(req, res) {
 
 async function enviarEmail(p) {
   const email = p.payer && p.payer.email;
+  console.log('[EMAIL] checando', { email: email, temKey: !!process.env.BREVO_API_KEY, temSender: !!process.env.SENDER_EMAIL, drive: process.env.DRIVE_URL_ESSENCIAL });
   if (!email) { console.log('[EMAIL] pagador sem e-mail'); return; }
   if (!process.env.BREVO_API_KEY || !process.env.SENDER_EMAIL) {
     console.log('[EMAIL] Brevo não configurado (faltam BREVO_API_KEY / SENDER_EMAIL)');
