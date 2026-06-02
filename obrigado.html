@@ -14,14 +14,14 @@
     .muted{color:#d6f0dd;font-size:.9rem;line-height:1.55}
   </style>
 
-  <!-- ════════ META PIXEL — troque SEU_PIXEL_ID ════════ -->
+  <!-- ════════ META PIXEL — troque 1464449862100173 ════════ -->
   <script>
     !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
     n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
     n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
     t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init','SEU_PIXEL_ID');
+    fbq('init','1464449862100173');
     fbq('track','PageView');
   </script>
 </head>
@@ -37,37 +37,51 @@
   (function(){
     var params = new URLSearchParams(location.search);
     var paymentId = params.get('payment_id') || params.get('collection_id');
-    var status    = params.get('status') || params.get('collection_status');
+    var pacote = params.get('external_reference') || params.get('pacote') || 'essencial';
 
     var titulo = document.getElementById('titulo');
     var msg    = document.getElementById('msg');
     var acao   = document.getElementById('acao');
 
-    function erro(txt){
-      titulo.textContent = 'Ops…';
-      msg.textContent = txt;
-    }
+    function erro(txt){ titulo.textContent = 'Ops…'; msg.textContent = txt; }
 
     if (!paymentId) { erro('Não encontramos o seu pagamento. Se você pagou, verifique seu e-mail do Mercado Pago.'); return; }
 
-    fetch('/api/verify?payment_id=' + encodeURIComponent(paymentId))
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        if (d.approved && d.url) {
-          titulo.textContent = 'Pagamento confirmado! 🎉';
-          msg.innerHTML = 'Acesso liberado. Clique abaixo para baixar sua coleção completa.';
-          acao.innerHTML = '<a class="btn" href="' + d.url + '" target="_blank" rel="noopener">📥 Acessar minha coleção</a>'
-                         + '<p class="muted" style="margin-top:18px;">Salve este link. Qualquer dúvida, responda o e-mail da compra.</p>';
-          // evento de conversão no Pixel do Facebook
-          if (window.fbq) fbq('track','Purchase', { currency:'BRL', value: (params.get('pacote')==='combo'?19.90:9.90) });
-        } else if (d.status === 'pending' || d.status === 'in_process') {
-          titulo.textContent = 'Pagamento em análise';
-          msg.textContent = 'Seu pagamento ainda está sendo processado (comum no Pix/boleto). Assim que aprovar, o acesso é liberado — você receberá por e-mail.';
-        } else {
-          erro('Não conseguimos confirmar o pagamento. Se você já pagou, aguarde alguns minutos e recarregue a página.');
-        }
-      })
-      .catch(function(){ erro('Erro ao confirmar o pagamento. Recarregue a página em instantes.'); });
+    var tentativas = 0;
+    var MAX = 45; // ~3 min (45 x 4s) — tempo de sobra pro Pix aprovar
+
+    function liberar(url){
+      titulo.textContent = 'Pagamento confirmado! 🎉';
+      msg.innerHTML = 'Acesso liberado. Clique abaixo para baixar sua coleção completa.';
+      acao.innerHTML = '<a class="btn" href="' + url + '" target="_blank" rel="noopener">📥 Acessar minha coleção</a>'
+                     + '<p class="muted" style="margin-top:18px;">Salve este link. Qualquer dúvida, responda o e-mail da compra.</p>';
+      if (window.fbq) fbq('track','Purchase', { currency:'BRL', value: (pacote === 'combo' ? 19.90 : 9.90) });
+    }
+
+    // NÃO confia no status da URL (é uma foto velha). Consulta o status AO VIVO no MP,
+    // repetindo até aprovar — porque o Pix pode levar alguns segundos pra cair.
+    function checar(){
+      fetch('/api/verify?payment_id=' + encodeURIComponent(paymentId))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (d.approved && d.url) { liberar(d.url); return; }
+          tentativas++;
+          if (tentativas >= MAX) {
+            titulo.textContent = 'Pagamento em análise';
+            msg.textContent = 'Seu Pix ainda está sendo confirmado. Assim que cair, o acesso libera — você também recebe por e-mail. Pode deixar esta página aberta.';
+            return;
+          }
+          titulo.textContent = 'Confirmando seu pagamento…';
+          msg.textContent = 'Aguardando a confirmação (Pix leva alguns segundos). Não feche esta página.';
+          setTimeout(checar, 4000);
+        })
+        .catch(function(){
+          tentativas++;
+          if (tentativas < MAX) setTimeout(checar, 4000);
+          else erro('Erro ao confirmar o pagamento. Recarregue a página em instantes.');
+        });
+    }
+    checar();
   })();
   </script>
 </body></html>
