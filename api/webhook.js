@@ -26,9 +26,12 @@ export default async function handler(req, res) {
 }
 
 async function enviarEmail(p) {
-  const email = p.payer && p.payer.email;
-  console.log('[EMAIL] checando', { email: email, temKey: !!process.env.BREVO_API_KEY, temSender: !!process.env.SENDER_EMAIL, drive: process.env.DRIVE_URL_ESSENCIAL });
-  if (!email) { console.log('[EMAIL] pagador sem e-mail'); return; }
+  const meta = p.metadata || {};
+  // prioriza o e-mail que o cliente digitou no checkout (validado); fallback no payer do MP
+  const email = String((meta.email || (p.payer && p.payer.email) || '')).trim().toLowerCase();
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  console.log('[EMAIL] checando', { email: email, emailOk: emailOk, temKey: !!process.env.BREVO_API_KEY, temSender: !!process.env.SENDER_EMAIL });
+  if (!emailOk) { console.log('[EMAIL] e-mail do destinatário inválido:', email); return; }
   if (!process.env.BREVO_API_KEY || !process.env.SENDER_EMAIL) {
     console.log('[EMAIL] Brevo não configurado (faltam BREVO_API_KEY / SENDER_EMAIL)');
     return;

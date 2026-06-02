@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     payment_method_id: 'pix',
     external_reference: pacote,
     notification_url: `${base}/api/webhook`,
-    metadata: { nome: nome || '', telefone: String(telefone || '').replace(/\D/g, '') },
+    metadata: { nome: nome || '', telefone: String(telefone || '').replace(/\D/g, ''), email: String(email || '').trim().toLowerCase() },
     payer: {
       email: email,
       first_name: nome || undefined,

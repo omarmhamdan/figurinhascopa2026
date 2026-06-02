@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     description: item.title,
     external_reference: pacote,
     notification_url: `${base}/api/webhook`,
-    metadata: { nome: nome || '', telefone: String(telefone || '').replace(/\D/g, '') },
+    metadata: { nome: nome || '', telefone: String(telefone || '').replace(/\D/g, ''), email: String(email || '').trim().toLowerCase() },
     payer: {
       email: email,
       identification: { type: identificationType, number: String(identificationNumber || '').replace(/\D/g, '') }
