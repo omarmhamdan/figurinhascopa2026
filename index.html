@@ -365,25 +365,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (oferta) new IntersectionObserver(function(e){ offerVisible = e[0].isIntersecting; update(); }, { threshold: 0 }).observe(oferta);
   }
 
-  // checkout via Mercado Pago Checkout Pro (backend cria a preference)
-  var precos = { essencial: 9.90, combo: 19.90 };
+  // checkout Pix na própria página (redireciona pro obrigado sozinho ao aprovar)
   document.querySelectorAll('[data-action="open-checkout"]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var p = btn.getAttribute('data-pacote');
-      // dispara evento no Meta Pixel
-      if (window.fbq) fbq('track', 'InitiateCheckout', { value: precos[p], currency: 'BRL', content_name: p });
-
-      var textoOriginal = btn.textContent;
-      btn.textContent = 'Aguarde…';
-      btn.style.pointerEvents = 'none';
-
-      fetch('/api/create-preference?pacote=' + p)
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-          if (d.init_point) { window.location.href = d.init_point; }
-          else { alert('Não foi possível abrir o pagamento. Tente novamente.'); console.error(d); btn.textContent = textoOriginal; btn.style.pointerEvents = ''; }
-        })
-        .catch(function(e){ alert('Erro ao abrir o pagamento. Tente novamente.'); console.error(e); btn.textContent = textoOriginal; btn.style.pointerEvents = ''; });
+      window.location.href = '/checkout.html?pacote=' + p;
     });
   });
 });

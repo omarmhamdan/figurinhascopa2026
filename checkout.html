@@ -1,0 +1,163 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagamento Pix — Figurinhas Copa 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Anton&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--green:#0b8b3d;--green-dark:#066b2d;--gold:#f4b400;--ink:#12241a;--line:#e3e8dd}
+    body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,var(--green),var(--green-dark));color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .anton{font-family:'Anton',sans-serif}
+    .card{background:#fff;border-radius:20px;padding:32px 26px;max-width:440px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);text-align:center}
+    h1{font-size:1.5rem;text-transform:uppercase;margin-bottom:4px}
+    .sub{color:#55665b;font-size:.9rem;margin-bottom:22px}
+    label{display:block;text-align:left;font-size:.82rem;font-weight:700;color:#33453a;margin:12px 0 5px}
+    input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:10px;font-size:1rem;font-family:inherit}
+    input:focus{outline:none;border-color:var(--green)}
+    .btn{display:block;width:100%;background:var(--gold);color:var(--ink);font-weight:800;text-transform:uppercase;letter-spacing:.04em;border:0;padding:16px;border-radius:10px;font-size:1.05rem;cursor:pointer;margin-top:20px;font-family:inherit}
+    .btn:disabled{opacity:.6;cursor:default}
+    .muted{color:#55665b;font-size:.8rem;line-height:1.5}
+    .hidden{display:none}
+    .qrbox{margin:8px auto 0}
+    .qrbox img{width:220px;height:220px;border:1px solid var(--line);border-radius:12px}
+    .copia{display:flex;gap:8px;margin-top:14px}
+    .copia input{font-size:.78rem;color:#33453a}
+    .copybtn{flex-shrink:0;background:var(--green);color:#fff;border:0;border-radius:10px;padding:0 16px;font-weight:700;cursor:pointer;font-family:inherit}
+    .status{margin-top:18px;font-weight:700;color:var(--green-dark)}
+    .spin{display:inline-block;width:16px;height:16px;border:3px solid #cfe9d6;border-top-color:var(--green);border-radius:50%;animation:s 1s linear infinite;vertical-align:middle;margin-right:8px}
+    @keyframes s{to{transform:rotate(360deg)}}
+    .err{color:#c0392b;font-size:.85rem;margin-top:12px}
+  </style>
+
+  <!-- META PIXEL -->
+  <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init','1464449862100173');fbq('track','PageView');
+  </script>
+</head>
+<body>
+  <div class="card">
+
+    <!-- ETAPA 1: dados -->
+    <div id="form-step">
+      <div style="font-size:2rem;margin-bottom:6px;">⚽</div>
+      <h1 class="anton" id="titulo-pacote">Pagar com Pix</h1>
+      <p class="sub" id="resumo">—</p>
+
+      <label for="email">E-mail (onde você recebe o acesso)</label>
+      <input id="email" type="email" placeholder="seu@email.com" autocomplete="email">
+
+      <label for="nome">Nome</label>
+      <input id="nome" type="text" placeholder="Seu nome" autocomplete="name">
+
+      <label for="cpf">CPF</label>
+      <input id="cpf" type="text" inputmode="numeric" placeholder="000.000.000-00">
+
+      <button class="btn" id="gerar">Gerar Pix</button>
+      <p class="err hidden" id="erro1"></p>
+      <p class="muted" style="margin-top:14px;">🔒 Pagamento via Mercado Pago. Liberação na hora após o Pix.</p>
+    </div>
+
+    <!-- ETAPA 2: QR -->
+    <div id="pix-step" class="hidden">
+      <div style="font-size:2rem;margin-bottom:6px;">📱</div>
+      <h1 class="anton">Escaneie pra pagar</h1>
+      <p class="sub">Abra o app do banco → Pix → Pagar com QR Code</p>
+
+      <div class="qrbox"><img id="qrimg" alt="QR Code Pix"></div>
+
+      <div class="copia">
+        <input id="copiacola" readonly>
+        <button class="copybtn" id="btncopia">Copiar</button>
+      </div>
+
+      <div class="status"><span class="spin"></span><span id="statustxt">Aguardando pagamento…</span></div>
+      <p class="muted" style="margin-top:16px;">Assim que o Pix cair, você é levado automaticamente para a sua coleção. Não feche esta tela.</p>
+    </div>
+
+  </div>
+
+  <script>
+  (function(){
+    var params = new URLSearchParams(location.search);
+    var pacote = params.get('pacote') === 'combo' ? 'combo' : 'essencial';
+    var preco  = pacote === 'combo' ? 19.90 : 9.90;
+    var nomePacote = pacote === 'combo' ? 'Combo Completo' : 'Coleção Essencial';
+
+    document.getElementById('titulo-pacote').textContent = 'Pix — ' + nomePacote;
+    document.getElementById('resumo').textContent = nomePacote + ' · R$ ' + preco.toFixed(2).replace('.', ',');
+
+    var formStep = document.getElementById('form-step');
+    var pixStep  = document.getElementById('pix-step');
+    var erro1    = document.getElementById('erro1');
+    var gerar    = document.getElementById('gerar');
+
+    function mostraErro(t){ erro1.textContent = t; erro1.classList.remove('hidden'); }
+
+    gerar.addEventListener('click', function(){
+      var email = document.getElementById('email').value.trim();
+      var nome  = document.getElementById('nome').value.trim();
+      var cpf   = document.getElementById('cpf').value.trim();
+      erro1.classList.add('hidden');
+
+      if (!email || email.indexOf('@') < 0) { mostraErro('Digite um e-mail válido.'); return; }
+      if (cpf.replace(/\D/g,'').length !== 11) { mostraErro('Digite um CPF válido (11 dígitos).'); return; }
+
+      gerar.disabled = true; gerar.textContent = 'Gerando Pix…';
+      if (window.fbq) fbq('track','InitiateCheckout', { value: preco, currency:'BRL', content_name: pacote });
+
+      fetch('/api/criar-pix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pacote: pacote, email: email, nome: nome, cpf: cpf })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (!d.id || !d.qr_code_base64) {
+          console.error(d);
+          gerar.disabled = false; gerar.textContent = 'Gerar Pix';
+          mostraErro('Não foi possível gerar o Pix. Confira os dados e tente de novo.');
+          return;
+        }
+        document.getElementById('qrimg').src = 'data:image/png;base64,' + d.qr_code_base64;
+        document.getElementById('copiacola').value = d.qr_code;
+        formStep.classList.add('hidden');
+        pixStep.classList.remove('hidden');
+        poll(d.id);
+      })
+      .catch(function(e){
+        console.error(e);
+        gerar.disabled = false; gerar.textContent = 'Gerar Pix';
+        mostraErro('Erro de conexão. Tente novamente.');
+      });
+    });
+
+    document.getElementById('btncopia').addEventListener('click', function(){
+      var inp = document.getElementById('copiacola');
+      inp.select();
+      navigator.clipboard && navigator.clipboard.writeText(inp.value);
+      this.textContent = 'Copiado!';
+      var b = this; setTimeout(function(){ b.textContent = 'Copiar'; }, 1500);
+    });
+
+    // Fica checando o status. Quando aprovar, redireciona automático pro obrigado.
+    function poll(id){
+      fetch('/api/verify?payment_id=' + encodeURIComponent(id))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (d.approved) {
+            document.getElementById('statustxt').textContent = 'Pagamento aprovado! Redirecionando…';
+            location.href = '/obrigado.html?payment_id=' + id + '&external_reference=' + pacote;
+            return;
+          }
+          setTimeout(function(){ poll(id); }, 4000);
+        })
+        .catch(function(){ setTimeout(function(){ poll(id); }, 5000); });
+    }
+  })();
+  </script>
+</body></html>
