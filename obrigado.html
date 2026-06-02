@@ -54,7 +54,10 @@
       titulo.textContent = 'Pagamento confirmado! 🎉';
       msg.innerHTML = 'Acesso liberado. Clique abaixo para baixar sua coleção completa.';
       acao.innerHTML = '<a class="btn" href="' + url + '" target="_blank" rel="noopener">📥 Acessar minha coleção</a>'
-                     + '<p class="muted" style="margin-top:18px;">Salve este link. Qualquer dúvida, responda o e-mail da compra.</p>';
+                     + '<div style="margin-top:18px;padding:14px;background:#fff7e6;border:1px solid #f4d58a;border-radius:10px;text-align:left;">'
+                     +   '<p style="font-size:.86rem;color:#33453a;line-height:1.5;margin:0;">📧 <b>Também enviamos o acesso para o seu e-mail.</b> Não encontrou na caixa de entrada? <b>Confira a pasta de Spam / Lixo Eletrônico / Promoções</b> e marque como “não é spam”.</p>'
+                     + '</div>'
+                     + '<p class="muted" style="margin-top:12px;">Salve este link. Qualquer dúvida, responda o e-mail da compra.</p>';
       if (window.fbq) fbq('track','Purchase', { currency:'BRL', value: (pacote === 'combo' ? 19.90 : 9.90) });
     }
 
