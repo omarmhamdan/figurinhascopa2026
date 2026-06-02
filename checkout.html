@@ -91,6 +91,8 @@
             <input id="form-checkout__identificationNumber" type="text" inputmode="numeric" placeholder="000.000.000-00">
           </div>
         </div>
+        <label for="form-checkout__phone">WhatsApp (com DDD)</label>
+        <input id="form-checkout__phone" type="tel" inputmode="numeric" placeholder="(11) 99999-9999" autocomplete="tel">
         <select id="form-checkout__identificationType" class="hidden"></select>
       </div>
 
@@ -183,6 +185,7 @@
       var em = val('form-checkout__cardholderEmail');
       if (!em || em.indexOf('@')<0) return 'Digite um e-mail válido.';
       if (val('form-checkout__identificationNumber').replace(/\D/g,'').length !== 11) return 'Digite um CPF válido.';
+      if (val('form-checkout__phone').replace(/\D/g,'').length < 10) return 'Digite um WhatsApp válido com DDD.';
       return null;
     }
 
@@ -210,7 +213,7 @@
       if (window.fbq) fbq('track','InitiateCheckout',{value:preco,currency:'BRL',content_name:pacote});
 
       fetch('/api/criar-pix',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({pacote:pacote, email:val('form-checkout__cardholderEmail'), nome:val('form-checkout__cardholderName'), cpf:val('form-checkout__identificationNumber')})})
+        body:JSON.stringify({pacote:pacote, email:val('form-checkout__cardholderEmail'), nome:val('form-checkout__cardholderName'), cpf:val('form-checkout__identificationNumber'), telefone:val('form-checkout__phone')})})
         .then(function(r){return r.json();})
         .then(function(d){
           if(!d.id||!d.qr_code_base64){ console.error(d); btn.disabled=false; btn.textContent='Gerar Pix'; showErr('erro-pix','Não foi possível gerar o Pix. Confira os dados.'); return; }
@@ -268,7 +271,8 @@
 
             fetch('/api/criar-cartao',{method:'POST',headers:{'Content-Type':'application/json'},
               body:JSON.stringify({ token:d.token, payment_method_id:d.paymentMethodId, issuer_id:d.issuerId,
-                email:d.cardholderEmail, identificationType:d.identificationType, identificationNumber:d.identificationNumber, pacote:pacote })})
+                email:d.cardholderEmail, identificationType:d.identificationType, identificationNumber:d.identificationNumber,
+                pacote:pacote, nome:val('form-checkout__cardholderName'), telefone:val('form-checkout__phone') })})
               .then(function(r){return r.json();})
               .then(function(resp){
                 if (resp.status==='approved' || resp.status==='in_process' || resp.status==='pending') {

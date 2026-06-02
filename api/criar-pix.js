@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   // Vercel já entrega req.body como objeto; fallback caso venha string
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
-  const { pacote = 'essencial', email, nome, cpf } = body || {};
+  const { pacote = 'essencial', email, nome, cpf, telefone } = body || {};
 
   if (!email) return res.status(400).json({ error: 'email obrigatório' });
 
@@ -25,6 +25,7 @@ export default async function handler(req, res) {
     payment_method_id: 'pix',
     external_reference: pacote,
     notification_url: `${base}/api/webhook`,
+    metadata: { nome: nome || '', telefone: String(telefone || '').replace(/\D/g, '') },
     payer: {
       email: email,
       first_name: nome || undefined,

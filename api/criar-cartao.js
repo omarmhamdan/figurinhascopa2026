@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   const {
     token, payment_method_id, issuer_id,
     email, identificationType = 'CPF', identificationNumber,
-    pacote = 'essencial'
+    pacote = 'essencial', nome, telefone
   } = body || {};
 
   if (!token || !email || !payment_method_id) {
@@ -33,6 +33,7 @@ export default async function handler(req, res) {
     description: item.title,
     external_reference: pacote,
     notification_url: `${base}/api/webhook`,
+    metadata: { nome: nome || '', telefone: String(telefone || '').replace(/\D/g, '') },
     payer: {
       email: email,
       identification: { type: identificationType, number: String(identificationNumber || '').replace(/\D/g, '') }
