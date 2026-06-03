@@ -113,6 +113,8 @@ async function enviarCapi(p) {
       custom_data: { currency: 'BRL', value: valor }
     }]
   };
+  // Validação na aba "Eventos de teste" do Gerenciador (setar META_CAPI_TEST_CODE; remover depois)
+  if (process.env.META_CAPI_TEST_CODE) body.test_event_code = process.env.META_CAPI_TEST_CODE;
 
   try {
     const r = await fetch(`https://graph.facebook.com/v21.0/${PIXEL_ID}/events?access_token=${token}`, {
