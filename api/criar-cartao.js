@@ -10,8 +10,10 @@ export default async function handler(req, res) {
   const {
     token, payment_method_id, issuer_id,
     email, identificationType = 'CPF', identificationNumber,
-    pacote = 'essencial', nome, telefone
+    pacote = 'essencial', nome, telefone, fbp, fbc
   } = body || {};
+  const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const ua = String(req.headers['user-agent'] || '');
 
   if (!token || !email || !payment_method_id) {
     return res.status(400).json({ error: 'dados do cartão incompletos' });
@@ -33,7 +35,13 @@ export default async function handler(req, res) {
     description: item.title,
     external_reference: pacote,
     notification_url: `${base}/api/webhook`,
-    metadata: { nome: nome || '', telefone: String(telefone || '').replace(/\D/g, ''), email: String(email || '').trim().toLowerCase() },
+    metadata: {
+      nome: nome || '',
+      telefone: String(telefone || '').replace(/\D/g, ''),
+      email: String(email || '').trim().toLowerCase(),
+      cpf: String(identificationNumber || '').replace(/\D/g, ''),
+      fbp: fbp || '', fbc: fbc || '', ip: ip, ua: ua
+    },
     payer: {
       email: email,
       identification: { type: identificationType, number: String(identificationNumber || '').replace(/\D/g, '') }

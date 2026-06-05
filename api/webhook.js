@@ -99,8 +99,13 @@ async function enviarCapi(p) {
   const valor = p.transaction_amount || (p.external_reference === 'combo' ? 19.90 : 9.90);
 
   const user_data = {};
-  if (email) user_data.em = [sha256(email)];
-  if (fone) user_data.ph = [sha256('55' + fone)];
+  if (email)            user_data.em = [sha256(email)];
+  if (fone)             user_data.ph = [sha256('55' + fone)];
+  if (meta.cpf)         user_data.external_id = [sha256(meta.cpf)];   // id estável (CPF hasheado)
+  if (meta.ip)          user_data.client_ip_address = meta.ip;        // NÃO hashear
+  if (meta.ua)          user_data.client_user_agent = meta.ua;        // NÃO hashear
+  if (meta.fbp)         user_data.fbp = meta.fbp;                     // NÃO hashear
+  if (meta.fbc)         user_data.fbc = meta.fbc;                     // NÃO hashear
 
   const body = {
     data: [{
