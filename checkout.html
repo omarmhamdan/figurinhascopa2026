@@ -183,7 +183,7 @@
     var params = new URLSearchParams(location.search);
     var pacote = params.get('pacote') === 'combo' ? 'combo' : 'essencial';
     var preco  = pacote === 'combo' ? 14.90 : 9.90;
-    var nomePacote = pacote === 'combo' ? 'Premium — Figurinhas Copa 2026' : 'Coleção Essencial — Figurinhas Copa 2026';
+    var nomePacote = pacote === 'combo' ? 'Combo Completo — Figurinhas Copa 2026' : 'Coleção Essencial — Figurinhas Copa 2026';
     var precoStr = preco.toFixed(2).replace('.', ',');
 
     document.getElementById('sum-nome').textContent = nomePacote;

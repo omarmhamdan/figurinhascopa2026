@@ -45,7 +45,7 @@ async function enviarEmail(p) {
     combo:     process.env.DRIVE_URL_COMBO
   };
   const url = links[p.external_reference] || links.essencial;
-  const nomePacote = p.external_reference === 'combo' ? 'Premium' : 'Coleção Essencial';
+  const nomePacote = p.external_reference === 'combo' ? 'Combo Completo' : 'Coleção Essencial';
 
   const html = `
   <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#12241a">
