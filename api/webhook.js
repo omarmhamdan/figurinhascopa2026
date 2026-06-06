@@ -45,7 +45,7 @@ async function enviarEmail(p) {
     combo:     process.env.DRIVE_URL_COMBO
   };
   const url = links[p.external_reference] || links.essencial;
-  const nomePacote = p.external_reference === 'combo' ? 'Combo Completo' : 'Coleção Essencial';
+  const nomePacote = p.external_reference === 'combo' ? 'Premium' : 'Coleção Essencial';
 
   const html = `
   <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#12241a">
@@ -96,7 +96,7 @@ async function enviarCapi(p) {
   const meta = p.metadata || {};
   const email = String(meta.email || (p.payer && p.payer.email) || '').trim().toLowerCase();
   const fone = String(meta.telefone || '').replace(/\D/g, '');
-  const valor = p.transaction_amount || (p.external_reference === 'combo' ? 19.90 : 9.90);
+  const valor = p.transaction_amount || (p.external_reference === 'combo' ? 14.90 : 9.90);
 
   const user_data = {};
   if (email)            user_data.em = [sha256(email)];

@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   const itens = {
     essencial: { title: 'Coleção Essencial — Figurinhas Copa 2026', price: 9.90 },
-    combo:     { title: 'Combo Completo — Figurinhas Copa 2026',     price: 19.90 }
+    combo:     { title: 'Premium — Figurinhas Copa 2026',     price: 14.90 }
   };
   const item = itens[pacote] || itens.essencial;
 
